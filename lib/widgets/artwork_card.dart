@@ -104,7 +104,7 @@ class ArtworkCard extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Price and Button Row
+                    // Price and Add to card button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -116,39 +116,24 @@ class ArtworkCard extends StatelessWidget {
                             color: Colors.black87,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            // Prevent card tap when button is pressed
-                            if (onAddToCart != null) {
-                              onAddToCart!();
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: onAddToCart,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.teal,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.shopping_cart,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Add to Cart',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
+                            icon: const Icon(Icons.shopping_cart, size: 16),
+                            label: const Text(
+                              'Add to Cart',
+                              style: TextStyle(fontSize: 12),
                             ),
                           ),
                         ),

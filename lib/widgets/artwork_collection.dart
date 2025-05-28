@@ -20,8 +20,8 @@ class ArtworkGridView extends StatelessWidget {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12
       ),
       itemCount: artworks.length,
       itemBuilder: (context, index) {
