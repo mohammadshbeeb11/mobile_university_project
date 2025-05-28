@@ -1,37 +1,40 @@
-class Artwork {
-  final String id;
-  final String imageUrl;
+class Favorite {
+  final int id;
+  final String artworkId;
+  final String addedAt;
   final String title;
+  final double price;
+  final String imageUrl;
+  final String currency;
   final String description;
   final String category;
-  final double price;
-  final String currency;
-  final bool isFeatured;
 
-  const Artwork({
+  const Favorite({
     required this.id,
-    required this.imageUrl,
+    required this.artworkId,
+    required this.addedAt,
     required this.title,
+    required this.price,
+    required this.imageUrl,
     required this.description,
     required this.category,
-    required this.price,
     this.currency = '\$',
-    this.isFeatured = false,
   });
 
   String get formattedPrice => '$currency${price.toStringAsFixed(0)}';
 
   // Factory constructor for creating from JSON
-  factory Artwork.fromJson(Map<String, dynamic> json) {
-    return Artwork(
-      id: json['id'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
+  factory Favorite.fromJson(Map<String, dynamic> json) {
+    return Favorite(
+      id: json['id'] ?? 0,
+      artworkId: json['artworkId'] ?? '',
+      addedAt: json['addedAt'] ?? '',
       title: json['title'] ?? '',
+      price: (json['price'] ?? 0).toDouble(),
+      imageUrl: json['imageUrl'] ?? '',
       description: json['description'] ?? '',
       category: json['category'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
       currency: json['currency'] ?? '\$',
-      isFeatured: json['isFeatured'] == 1 || json['isFeatured'] == true,
     );
   }
 
@@ -39,13 +42,14 @@ class Artwork {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'imageUrl': imageUrl,
+      'artworkId': artworkId,
+      'addedAt': addedAt,
       'title': title,
+      'price': price,
+      'imageUrl': imageUrl,
       'description': description,
       'category': category,
-      'price': price,
       'currency': currency,
-      'isFeatured': isFeatured ? 1 : 0,
     };
   }
 }

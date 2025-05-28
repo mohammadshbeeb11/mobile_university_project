@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/screens/add_item_screen.dart';
 import 'package:khat_husseini/utils/my_appbar.dart';
+import 'package:khat_husseini/utils/database_helper.dart';
 import 'package:khat_husseini/widgets/artwork_collection.dart';
 import 'package:khat_husseini/widgets/artwork_featured_carousel.dart';
 
@@ -13,7 +14,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   String selectedCategory = 'All';
+  List<Artwork> allArtworks = [];
+  bool _isLoading = true;
 
   final List<String> categories = [
     'All',
@@ -25,88 +29,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'shrines',
   ];
 
-  // All artworks with featured flag
-  final List<Artwork> allArtworks = [
-    Artwork(
-      id: '1',
-      imageUrl: 'https://example.com/artwork1.jpg',
-      title: 'يا أبتاه',
-      description:
-          'فما يتضع "لبعض" يا أبتاه! أظل "معطلكات" جولة يتهي صقب نتى علقت، تر ةو فوض عمر من إسلامي.',
-      category: 'portraits',
-      price: 100,
-      isFeatured: true,
-    ),
-    Artwork(
-      id: '2',
-      imageUrl: 'https://example.com/artwork2.jpg',
-      title: 'الوليد الأعظم',
-      description: 'عمل فني معقد يجبو عاله مطاليت بتكم ملحيس لوافرار.',
-      category: 'historical',
-      price: 100,
-      isFeatured: true,
-    ),
-    Artwork(
-      id: '3',
-      imageUrl: 'https://example.com/artwork3.jpg',
-      title: 'Islamic Banner',
-      description:
-          'Traditional Islamic banner with beautiful calligraphy and ornate designs.',
-      category: 'Banner',
-      price: 150,
-      isFeatured: false,
-    ),
-    Artwork(
-      id: '4',
-      imageUrl: 'https://example.com/artwork4.jpg',
-      title: 'Sacred Flag',
-      description:
-          'Historical flag with religious significance and intricate patterns.',
-      category: 'Flag',
-      price: 120,
-      isFeatured: true,
-    ),
-    Artwork(
-      id: '5',
-      imageUrl: 'https://example.com/artwork5.jpg',
-      title: 'Modern Painting',
-      description:
-          'Contemporary artwork blending traditional and modern artistic techniques.',
-      category: 'Paintings',
-      price: 200,
-      isFeatured: false,
-    ),
-    Artwork(
-      id: '6',
-      imageUrl: 'https://example.com/artwork6.jpg',
-      title: 'Holy Shrine',
-      description:
-          'Artistic representation of a sacred shrine with golden details.',
-      category: 'shrines',
-      price: 300,
-      isFeatured: true,
-    ),
-    Artwork(
-      id: '7',
-      imageUrl: 'https://example.com/artwork7.jpg',
-      title: 'Islamic Art',
-      description:
-          'Beautiful traditional Islamic artwork with intricate patterns and designs.',
-      category: 'traditional',
-      price: 150,
-      isFeatured: false,
-    ),
-    Artwork(
-      id: '8',
-      imageUrl: 'https://example.com/artwork8.jpg',
-      title: 'Modern Portrait',
-      description:
-          'Contemporary portrait artwork with modern artistic techniques.',
-      category: 'portraits',
-      price: 200,
-      isFeatured: false,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadArtworks();
+  }
+
+  Future<void> _loadArtworks() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final artworks = await _databaseHelper.getAllArtworks();
+      setState(() {
+        allArtworks = artworks;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading artworks: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   // Get featured artworks for carousel
   List<Artwork> get featuredArtworks {
@@ -126,14 +78,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .toList();
   }
 
-  // Method to add new artwork - NEW METHOD
-  void _addNewArtwork(Artwork artwork) {
-    setState(() {
-      allArtworks.add(artwork);
-    });
+  // Method to add new artwork
+  void _addNewArtwork(Artwork artwork) async {
+    try {
+      await _databaseHelper.insertArtwork(artwork);
+      await _loadArtworks(); // Reload from database
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${artwork.title} added successfully!'),
+            backgroundColor: Colors.teal,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding artwork: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  // Method to navigate to Add Item Screen - NEW METHOD
+  // Method to navigate to Add Item Screen
   void _navigateToAddItemScreen() {
     Navigator.push(
       context,
@@ -143,100 +113,180 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Method to add artwork to cart
+  Future<void> _addToCart(Artwork artwork) async {
+    try {
+      await _databaseHelper.addToCart(artwork.id, 1);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${artwork.title} added to cart!'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.teal,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding to cart: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: PreferredSize(
-        preferredSize: Size(double.infinity, 50),
+        preferredSize: const Size(double.infinity, 50),
         child: MyAppbar(title: "Dashboard", icon: Icons.dashboard),
       ),
-
-      body: ListView(
-        children: [
-          const SizedBox(height: 16),
-          const Text(
-            'Featured Artworks',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 16),
-
-          ArtworkCarousel(
-            artworks: featuredArtworks,
-            onAddToCart: (artwork) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${artwork.title} added to cart!'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-
-          const SizedBox(height: 32),
-
-          // Results count
-          Text(
-            'Our Artworks',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 16),
-
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = category == selectedCategory;
-
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(category),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                    backgroundColor: Colors.grey[200],
-                    selectedColor: Colors.teal.withOpacity(0.2),
-                    checkmarkColor: Colors.teal,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.teal : Colors.black87,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: Colors.teal),
+              )
+              : RefreshIndicator(
+                onRefresh: _loadArtworks,
+                color: Colors.teal,
+                child: ListView(
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Featured Artworks',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
+                    const SizedBox(height: 16),
+                    if (featuredArtworks.isNotEmpty)
+                      ArtworkCarousel(
+                        artworks: featuredArtworks,
+                        onAddToCart: _addToCart,
+                      )
+                    else
+                      Container(
+                        height: 200,
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.image_not_supported,
+                                size: 50,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No featured artworks',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'Our Artworks',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 50,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          final isSelected = category == selectedCategory;
 
-          const SizedBox(height: 16),
-
-          ArtworkGridView(
-            artworks: filteredArtworks,
-            onAddToCart: (artwork) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${artwork.title} added to cart!'),
-                  duration: const Duration(seconds: 2),
-                  backgroundColor: Colors.teal,
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(category),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedCategory = category;
+                                });
+                              },
+                              backgroundColor: Colors.grey[200],
+                              selectedColor: Colors.teal.withOpacity(0.2),
+                              checkmarkColor: Colors.teal,
+                              labelStyle: TextStyle(
+                                color:
+                                    isSelected ? Colors.teal : Colors.black87,
+                                fontWeight:
+                                    isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (filteredArtworks.isNotEmpty)
+                      ArtworkGridView(
+                        artworks: filteredArtworks,
+                        onAddToCart: _addToCart,
+                      )
+                    else
+                      Container(
+                        height: 200,
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 50,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                selectedCategory == 'All'
+                                    ? 'No artworks available'
+                                    : 'No artworks in $selectedCategory category',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 100), // Space for bottom navigation
+                  ],
                 ),
-              );
-            },
-          ),
-        ],
-      ),
-
+              ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddItemScreen,
         backgroundColor: Colors.teal,

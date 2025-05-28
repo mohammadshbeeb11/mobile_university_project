@@ -1,10 +1,147 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
+import 'package:khat_husseini/utils/database_helper.dart';
+import 'package:khat_husseini/utils/shared_prefs_helper.dart';
 
-class ArtworkDetailsScreen extends StatelessWidget {
+class ArtworkDetailsScreen extends StatefulWidget {
   final Artwork artwork;
 
   const ArtworkDetailsScreen({super.key, required this.artwork});
+
+  @override
+  State<ArtworkDetailsScreen> createState() => _ArtworkDetailsScreenState();
+}
+
+class _ArtworkDetailsScreenState extends State<ArtworkDetailsScreen> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper();
+  bool _isFavorite = false;
+  bool _isAddingToCart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfFavorite();
+  }
+
+  Future<void> _checkIfFavorite() async {
+    // First check in shared preferences
+    var isFav = await _prefsHelper.isFavorite(widget.artwork.id);
+
+    // If not found in shared prefs, check database
+    if (!isFav) {
+      isFav = await _databaseHelper.isFavorite(widget.artwork.id);
+    }
+
+    if (mounted) {
+      setState(() {
+        _isFavorite = isFav;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      if (_isFavorite) {
+        // Remove from database
+        await _databaseHelper.removeFromFavorites(widget.artwork.id);
+
+        // Update favorites in shared preferences
+        final favorites = await _databaseHelper.getFavorites();
+        await _prefsHelper.saveFavorites(favorites);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.artwork.title} removed from favorites'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        // Add to database
+        await _databaseHelper.addToFavorites(widget.artwork.id);
+
+        // Update favorites in shared preferences
+        final favorites = await _databaseHelper.getFavorites();
+        await _prefsHelper.saveFavorites(favorites);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.artwork.title} added to favorites'),
+              backgroundColor: Colors.teal,
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _addToCart() async {
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    try {
+      // Add to database
+      await _databaseHelper.addToCart(widget.artwork.id, 1);
+
+      // Update cart items in shared preferences
+      final cartItems = await _databaseHelper.getCartItems();
+      await _prefsHelper.saveCartItems(cartItems);
+
+      if (mounted) {
+        setState(() {
+          _isAddingToCart = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.artwork.title} added to cart'),
+            backgroundColor: Colors.teal,
+            duration: const Duration(seconds: 2),
+            action: SnackBarAction(
+              label: 'View Cart',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to the cart tab in the main navigation
+                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/main',
+                  arguments: {'tabIndex': 1}, // 1 is the index of the cart tab
+                );
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isAddingToCart = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding to cart: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +156,11 @@ class ArtworkDetailsScreen extends StatelessWidget {
             foregroundColor: Colors.white,
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
-                tag: 'artwork-${artwork.id}',
-                child: Image.network(artwork.imageUrl, fit: BoxFit.cover),
+                tag: 'artwork-${widget.artwork.id}',
+                child: Image.network(
+                  widget.artwork.imageUrl,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -41,7 +181,7 @@ class ArtworkDetailsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              artwork.title,
+                              widget.artwork.title,
                               style: const TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -59,7 +199,7 @@ class ArtworkDetailsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
-                                artwork.category,
+                                widget.artwork.category,
                                 style: const TextStyle(
                                   color: Colors.teal,
                                   fontSize: 14,
@@ -81,7 +221,7 @@ class ArtworkDetailsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          artwork.formattedPrice,
+                          widget.artwork.formattedPrice,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -105,7 +245,7 @@ class ArtworkDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    artwork.description,
+                    widget.artwork.description,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[700],
@@ -127,8 +267,8 @@ class ArtworkDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Details Cards
-                  _buildDetailCard('Category', artwork.category),
-                  _buildDetailCard('Price', artwork.formattedPrice),
+                  _buildDetailCard('Category', widget.artwork.category),
+                  _buildDetailCard('Price', widget.artwork.formattedPrice),
 
                   // Add more detail cards based on your Artwork model
                   // _buildDetailCard('Artist', artwork.artist ?? 'Unknown'),
@@ -165,16 +305,11 @@ class ArtworkDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  onPressed: () {
-                    // Add to favorites logic
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Added to favorites!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.favorite_border, color: Colors.teal),
+                  onPressed: _toggleFavorite,
+                  icon: Icon(
+                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: _isFavorite ? Colors.red : Colors.teal,
+                  ),
                 ),
               ),
 
@@ -182,46 +317,41 @@ class ArtworkDetailsScreen extends StatelessWidget {
 
               // Add to Cart Button
               Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Add to cart logic
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${artwork.title} added to cart!'),
-                        duration: const Duration(seconds: 2),
-                        action: SnackBarAction(
-                          label: 'View Cart',
-                          onPressed: () {
-                            // Navigate to cart
-                          },
+                child:
+                    _isAddingToCart
+                        ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                        : ElevatedButton(
+                          onPressed: _addToCart,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.shopping_cart),
+                              SizedBox(width: 8),
+                              Text(
+                                'Add to Cart',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_cart),
-                      SizedBox(width: 8),
-                      Text(
-                        'Add to Cart',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
@@ -254,8 +384,8 @@ class ArtworkDetailsScreen extends StatelessWidget {
             value,
             style: const TextStyle(
               fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: Colors.black87,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],

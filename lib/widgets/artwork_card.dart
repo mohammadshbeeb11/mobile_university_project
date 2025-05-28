@@ -1,12 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/screens/artwork_details_screen.dart';
+import 'package:khat_husseini/utils/database_helper.dart';
 
-class ArtworkCard extends StatelessWidget {
+class ArtworkCard extends StatefulWidget {
   final Artwork artwork;
   final VoidCallback? onAddToCart;
 
   const ArtworkCard({super.key, required this.artwork, this.onAddToCart});
+
+  @override
+  State<ArtworkCard> createState() => _ArtworkCardState();
+}
+
+class _ArtworkCardState extends State<ArtworkCard> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfFavorite();
+  }
+
+  Future<void> _checkIfFavorite() async {
+    final isFav = await _databaseHelper.isFavorite(widget.artwork.id);
+    if (mounted) {
+      setState(() {
+        _isFavorite = isFav;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      if (_isFavorite) {
+        await _databaseHelper.removeFromFavorites(widget.artwork.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.artwork.title} removed from favorites'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      } else {
+        await _databaseHelper.addToFavorites(widget.artwork.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.artwork.title} added to favorites'),
+              backgroundColor: Colors.teal,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +77,11 @@ class ArtworkCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ArtworkDetailsScreen(artwork: artwork),
+            builder: (context) => ArtworkDetailsScreen(artwork: widget.artwork),
           ),
-        );
+        ).then(
+          (_) => _checkIfFavorite(),
+        ); // Refresh favorite status when returning
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -35,18 +99,45 @@ class ArtworkCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Section with Hero Animation
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Hero(
-                  tag: 'artwork-${artwork.id}',
-                  child: Image.network(artwork.imageUrl, fit: BoxFit.cover),
+            // Image Section with Hero Animation and Favorite Button
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Hero(
+                      tag: 'artwork-${widget.artwork.id}',
+                      child: Image.network(
+                        widget.artwork.imageUrl,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // Favorite Button
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: _toggleFavorite,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: _isFavorite ? Colors.red : Colors.grey,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             // Content Section
@@ -58,7 +149,7 @@ class ArtworkCard extends StatelessWidget {
                   children: [
                     // Title
                     Text(
-                      artwork.title,
+                      widget.artwork.title,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -73,7 +164,7 @@ class ArtworkCard extends StatelessWidget {
                     // Description
                     Expanded(
                       child: Text(
-                        artwork.description,
+                        widget.artwork.description,
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
@@ -93,7 +184,7 @@ class ArtworkCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        artwork.category,
+                        widget.artwork.category,
                         style: const TextStyle(
                           color: Colors.teal,
                           fontSize: 12,
@@ -109,7 +200,7 @@ class ArtworkCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          artwork.formattedPrice,
+                          widget.artwork.formattedPrice,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -118,7 +209,7 @@ class ArtworkCard extends StatelessWidget {
                         ),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: onAddToCart,
+                            onPressed: widget.onAddToCart,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.teal,
                               foregroundColor: Colors.white,

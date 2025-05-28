@@ -10,79 +10,141 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final admin = {'email': 'admin@admin.com', 'password': '1234567'};
-
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  // Hardcoded credentials for demo
+  final String _hardcodedEmail = "admin@admin.com";
+  final String _hardcodedPassword = "admin123";
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill the credentials for easy testing
+    _emailController.text = _hardcodedEmail;
+    _passwordController.text = _hardcodedPassword;
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _onLoginPressed() {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (!_formKey.currentState!.validate()) return;
+    // Simulate a brief delay for loading effect
+    Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        _isLoading = false;
+      });
 
-    final isValidUser = _areCredentialsCorrect(email, password);
-
-    if (isValidUser) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid email or password')),
-      );
-    }
-  }
-
-  bool _areCredentialsCorrect(String email, String password) {
-    return email == admin['email'] && password == admin['password'];
-  }
-
-  String? _validateEmail(String? email) {
-    if (email == null || email.isEmpty) return 'Email is required';
-    if (!email.contains('@')) return 'Email must contain @';
-    return null;
-  }
-
-  String? _validatePassword(String? password) {
-    if (password == null || password.isEmpty) return 'Password is required';
-    if (password.length <= 6) return 'Password must be at least 6 characters';
-    return null;
+      // Navigate to main screen (dashboard)
+      Navigator.pushReplacementNamed(context, '/main');
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.teal),
+      ),
       body: Center(
-        child: SizedBox(
-          width: 300,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Icon(Icons.lock_rounded, size: 80, color: Colors.teal),
+                const SizedBox(height: 32),
                 const Text(
-                  "Login",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30,
-                  ),
+                  "Welcome Back",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 8),
+                Text(
+                  "Log in to access your account",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 32),
+
                 MyTextFormField(
                   controller: _emailController,
                   label: "Email",
-                  validate: (emailField) => _validateEmail(emailField),
+                  validate: (_) => null, // No validation needed
                 ),
                 const SizedBox(height: 20),
+
                 MyTextFormField(
                   controller: _passwordController,
                   label: "Password",
-                  validate: (passwordField) => _validatePassword(passwordField),
+                  validate: (_) => null, // No validation needed
                   isObscured: true,
                 ),
-                const SizedBox(height: 20),
-                MyButton(title: "Login", onPressed: () => _onLoginPressed()),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Forgot password feature not implemented yet',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Forgot Password?",
+                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : MyButton(title: "Login", onPressed: _onLoginPressed),
+
+                const SizedBox(height: 24),
+
+                // Sign up link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/signup');
+                      },
+                      child: const Text(
+                        "Sign Up",
+                        style: TextStyle(
+                          color: Colors.teal,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

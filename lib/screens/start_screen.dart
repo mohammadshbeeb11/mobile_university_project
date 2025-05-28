@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:khat_husseini/utils/my_appbar.dart';
-import 'package:khat_husseini/utils/my_button.dart';
-import 'package:khat_husseini/utils/my_drawer.dart';
 
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key});
@@ -9,18 +6,7 @@ class StartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      // App bar for start screen
-      appBar: PreferredSize(
-        preferredSize: Size(double.infinity, 60),
-        child: MyAppbar(title: "KhatHusseini", icon: Icons.format_paint),
-      ),
-
-// Drawer for mobile application, it contains tiles to navigate between different pages
-      drawer: MyDrawer(),
-
       body: Container(
-        padding: EdgeInsets.all(20),
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
@@ -28,37 +14,119 @@ class StartScreen extends StatelessWidget {
             image: AssetImage("assets/images/islamic-art-bg.jpeg"),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.6), // Adjust the darkness here
+              Colors.black.withOpacity(
+                0.7,
+              ), // Darker overlay for better contrast
               BlendMode.darken,
             ),
           ),
         ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // App logo/title at the top
+                const SizedBox(height: 40),
+                const Text(
+                  "Khat Husseini",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
 
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Spiritual Islamic Art Collection",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
+                const SizedBox(height: 10),
+                Container(
+                  width: 80,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.teal,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Main content in the middle
+                Text(
+                  "Spiritual Islamic Art Collection",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(1, 1),
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Text(
+                  "Discover beautiful paintings of revered Shia figures including Imam Ali, Imam Hussein, and Sayed Hassan. Each piece is crafted with devotion and spiritual significance.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 16,
+                    height: 1.5,
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Buttons at the bottom
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 3,
+                  ),
+                  child: const Text(
+                    "Login",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/signup');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white, width: 2),
+                    minimumSize: const Size(double.infinity, 54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    "Sign Up",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
             ),
-      
-            SizedBox(height: 20),
-      
-            Text(
-              "Discover beautiful paintings of revered Shia figures including Imam Ali, Imam Hussein, and Sayed Hassan. Each piece is crafted with devotion and spiritual significance.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white),
-            ),
-      
-            SizedBox(height: 20),
-      
-            MyButton(title: "Get Started", onPressed: (){}),
-          ],
+          ),
         ),
       ),
     );
