@@ -20,7 +20,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'khat_husseini.db');
+    String path = join(await getDatabasesPath(), 'khat_husseinii.db');
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
@@ -90,77 +90,77 @@ class DatabaseHelper {
 
   Future<void> _insertSampleData(Database db) async {
     // Sample artworks
-    final sampleArtworks = [
-      {
-        'id': '1',
-        'imageUrl': 'https://example.com/artwork1.jpg',
-        'title': 'يا أبتاه',
-        'description':
-            'فما يتضع "لبعض" يا أبتاه! أظل "معطلكات" جولة يتهي صقب نتى علقت، تر ةو فوض عمر من إسلامي.',
-        'category': 'portraits',
-        'price': 100.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-      {
-        'id': '2',
-        'imageUrl': 'https://example.com/artwork2.jpg',
-        'title': 'الوليد الأعظم',
-        'description': 'عمل فني معقد يجبو عاله مطاليت بتكم ملحيس لوافرار.',
-        'category': 'historical',
-        'price': 100.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-      {
-        'id': '3',
-        'imageUrl': 'https://example.com/artwork3.jpg',
-        'title': 'Islamic Banner',
-        'description':
-            'Traditional Islamic banner with beautiful calligraphy and ornate designs.',
-        'category': 'Banner',
-        'price': 150.0,
-        'currency': '\$',
-        'isFeatured': 0,
-      },
-      {
-        'id': '4',
-        'imageUrl': 'https://example.com/artwork4.jpg',
-        'title': 'Sacred Flag',
-        'description':
-            'Historical flag with religious significance and intricate patterns.',
-        'category': 'Flag',
-        'price': 120.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-      {
-        'id': '5',
-        'imageUrl': 'https://example.com/artwork5.jpg',
-        'title': 'Modern Painting',
-        'description':
-            'Contemporary artwork blending traditional and modern artistic techniques.',
-        'category': 'Paintings',
-        'price': 200.0,
-        'currency': '\$',
-        'isFeatured': 0,
-      },
-      {
-        'id': '6',
-        'imageUrl': 'https://example.com/artwork6.jpg',
-        'title': 'Holy Shrine',
-        'description':
-            'Artistic representation of a sacred shrine with golden details.',
-        'category': 'shrines',
-        'price': 300.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-    ];
+    // final sampleArtworks = [
+    //   {
+    //     'id': '1',
+    //     'imageUrl': 'https://example.com/artwork1.jpg',
+    //     'title': 'يا أبتاه',
+    //     'description':
+    //         'فما يتضع "لبعض" يا أبتاه! أظل "معطلكات" جولة يتهي صقب نتى علقت، تر ةو فوض عمر من إسلامي.',
+    //     'category': 'portraits',
+    //     'price': 100.0,
+    //     'currency': '\$',
+    //     'isFeatured': 1,
+    //   },
+    //   {
+    //     'id': '2',
+    //     'imageUrl': 'https://example.com/artwork2.jpg',
+    //     'title': 'الوليد الأعظم',
+    //     'description': 'عمل فني معقد يجبو عاله مطاليت بتكم ملحيس لوافرار.',
+    //     'category': 'historical',
+    //     'price': 100.0,
+    //     'currency': '\$',
+    //     'isFeatured': 1,
+    //   },
+    //   {
+    //     'id': '3',
+    //     'imageUrl': 'https://example.com/artwork3.jpg',
+    //     'title': 'Islamic Banner',
+    //     'description':
+    //         'Traditional Islamic banner with beautiful calligraphy and ornate designs.',
+    //     'category': 'Banner',
+    //     'price': 150.0,
+    //     'currency': '\$',
+    //     'isFeatured': 0,
+    //   },
+    //   {
+    //     'id': '4',
+    //     'imageUrl': 'https://example.com/artwork4.jpg',
+    //     'title': 'Sacred Flag',
+    //     'description':
+    //         'Historical flag with religious significance and intricate patterns.',
+    //     'category': 'Flag',
+    //     'price': 120.0,
+    //     'currency': '\$',
+    //     'isFeatured': 1,
+    //   },
+    //   {
+    //     'id': '5',
+    //     'imageUrl': 'https://example.com/artwork5.jpg',
+    //     'title': 'Modern Painting',
+    //     'description':
+    //         'Contemporary artwork blending traditional and modern artistic techniques.',
+    //     'category': 'Paintings',
+    //     'price': 200.0,
+    //     'currency': '\$',
+    //     'isFeatured': 0,
+    //   },
+    //   {
+    //     'id': '6',
+    //     'imageUrl': 'https://example.com/artwork6.jpg',
+    //     'title': 'Holy Shrine',
+    //     'description':
+    //         'Artistic representation of a sacred shrine with golden details.',
+    //     'category': 'shrines',
+    //     'price': 300.0,
+    //     'currency': '\$',
+    //     'isFeatured': 1,
+    //   },
+    // ];
 
-    for (var artwork in sampleArtworks) {
-      await db.insert('artworks', artwork);
-    }
+    // for (var artwork in sampleArtworks) {
+    //   await db.insert('artworks', artwork);
+    // }
 
     // Sample user profile
     await db.insert('user_profile', {

@@ -14,7 +14,7 @@ class MainNavigationScreen extends StatefulWidget {
 class MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  // Keys for cart and favorites screens to force refresh
+  
   final GlobalKey<CartScreenState> _cartKey = GlobalKey<CartScreenState>();
   final GlobalKey<FavoritesScreenState> _favoritesKey =
       GlobalKey<FavoritesScreenState>();
@@ -32,14 +32,14 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
   }
 
-  // Method to navigate to a specific tab
+  
   void navigateToTab(int index) {
     if (index >= 0 && index < _screens.length) {
       setState(() {
         _currentIndex = index;
       });
 
-      // Refresh cart or favorites when navigating to those tabs
+      
       if (index == 1) {
         _cartKey.currentState?.refreshCart();
       } else if (index == 2) {
@@ -52,7 +52,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Check if navigation arguments are passed
+    
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args != null && args is Map<String, dynamic>) {
       final tabIndex = args['tabIndex'];
