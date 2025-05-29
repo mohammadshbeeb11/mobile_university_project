@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/utils/database_helper.dart';
 import 'package:khat_husseini/utils/shared_prefs_helper.dart';
+import 'dart:io';
 
 class ArtworkDetailsScreen extends StatefulWidget {
   final Artwork artwork;
@@ -157,10 +158,36 @@ class _ArtworkDetailsScreenState extends State<ArtworkDetailsScreen> {
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'artwork-${widget.artwork.id}',
-                child: Image.network(
-                  widget.artwork.imageUrl,
-                  fit: BoxFit.cover,
-                ),
+                child:
+                    widget.artwork.imageUrl.startsWith('http')
+                        ? Image.network(
+                          widget.artwork.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 100,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                        )
+                        : Image.file(
+                          File(widget.artwork.imageUrl),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 100,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                        ),
               ),
             ),
           ),

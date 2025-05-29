@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class AddItemScreen extends StatefulWidget {
   final Function(Artwork) onAddArtwork;
@@ -14,11 +16,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _imageUrlController = TextEditingController();
   final _priceController = TextEditingController();
 
   String selectedCategory = 'Banner';
   bool isFeatured = false;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> categories = [
     'Banner',
@@ -34,18 +37,45 @@ class _AddItemScreenState extends State<AddItemScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _imageUrlController.dispose();
     _priceController.dispose();
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error selecting image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _addArtwork() {
     if (_formKey.currentState!.validate()) {
+      if (_selectedImage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select an image'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final newArtwork = Artwork(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
-        imageUrl: _imageUrlController.text.trim(),
+        imageUrl: _selectedImage!.path, // Store local file path
         category: selectedCategory,
         price: double.parse(_priceController.text.trim()),
         isFeatured: isFeatured,
@@ -115,24 +145,110 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
               const SizedBox(height: 16),
 
-              // Image URL Field
-              TextFormField(
-                controller: _imageUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Image URL',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.image),
-                  hintText: 'https://example.com/image.jpg',
+              // Image Picker
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter an image URL';
-                  }
-                  if (!Uri.tryParse(value.trim())!.hasAbsolutePath == true) {
-                    return 'Please enter a valid URL';
-                  }
-                  return null;
-                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Artwork Image',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child:
+                            _selectedImage != null
+                                ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                                : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.image,
+                                      size: 80,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No image selected',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    ElevatedButton.icon(
+                                      onPressed: _pickImage,
+                                      icon: const Icon(
+                                        Icons.add_photo_alternate,
+                                      ),
+                                      label: const Text('Select Image'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.teal,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                      ),
+                      if (_selectedImage != null) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _pickImage,
+                              icon: const Icon(Icons.photo_library),
+                              label: const Text('Change Image'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedImage = null;
+                                });
+                              },
+                              icon: const Icon(Icons.delete),
+                              label: const Text('Remove'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
 
               const SizedBox(height: 16),
@@ -189,6 +305,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
               // Featured Toggle
               Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: SwitchListTile(
                   title: const Text('Featured Artwork'),
                   subtitle: const Text('Display in featured carousel'),

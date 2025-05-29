@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'artwork_card.dart';
-
+import 'dart:io';
 
 class ArtworkGridView extends StatelessWidget {
   final List<Artwork> artworks;
   final Function(Artwork)? onAddToCart;
 
-  const ArtworkGridView({
-    super.key,
-    required this.artworks, this.onAddToCart,
-  });
+  const ArtworkGridView({super.key, required this.artworks, this.onAddToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +18,7 @@ class ArtworkGridView extends StatelessWidget {
         crossAxisCount: 2,
         childAspectRatio: 0.7,
         mainAxisSpacing: 12,
-        crossAxisSpacing: 12
+        crossAxisSpacing: 12,
       ),
       itemCount: artworks.length,
       itemBuilder: (context, index) {
