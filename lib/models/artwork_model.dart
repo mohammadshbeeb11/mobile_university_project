@@ -21,31 +21,25 @@ class Artwork {
 
   String get formattedPrice => '$currency${price.toStringAsFixed(0)}';
 
-  // Factory constructor for creating from JSON
-  factory Artwork.fromJson(Map<String, dynamic> json) {
-    return Artwork(
-      id: json['id'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      category: json['category'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      currency: json['currency'] ?? '\$',
-      isFeatured: json['isFeatured'] == 1 || json['isFeatured'] == true,
-    );
-  }
+  factory Artwork.fromJson(Map<String, dynamic> json) => Artwork(
+    id: json['id'] ?? '',
+    imageUrl: json['imageUrl'] ?? '',
+    title: json['title'] ?? '',
+    description: json['description'] ?? '',
+    category: json['category'] ?? '',
+    price: (json['price'] ?? 0).toDouble(),
+    currency: json['currency'] ?? '\$',
+    isFeatured: json['isFeatured'] == 1 || json['isFeatured'] == true,
+  );
 
-  // Convert to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'imageUrl': imageUrl,
-      'title': title,
-      'description': description,
-      'category': category,
-      'price': price,
-      'currency': currency,
-      'isFeatured': isFeatured ? 1 : 0,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'imageUrl': imageUrl,
+    'title': title,
+    'description': description,
+    'category': category,
+    'price': price,
+    'currency': currency,
+    'isFeatured': isFeatured ? 1 : 0,
+  };
 }

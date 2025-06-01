@@ -5,9 +5,9 @@ class Favorite {
   final String title;
   final double price;
   final String imageUrl;
-  final String currency;
   final String description;
   final String category;
+  final String currency;
 
   const Favorite({
     required this.id,
@@ -23,33 +23,27 @@ class Favorite {
 
   String get formattedPrice => '$currency${price.toStringAsFixed(0)}';
 
-  // Factory constructor for creating from JSON
-  factory Favorite.fromJson(Map<String, dynamic> json) {
-    return Favorite(
-      id: json['id'] ?? 0,
-      artworkId: json['artworkId'] ?? '',
-      addedAt: json['addedAt'] ?? '',
-      title: json['title'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      imageUrl: json['imageUrl'] ?? '',
-      description: json['description'] ?? '',
-      category: json['category'] ?? '',
-      currency: json['currency'] ?? '\$',
-    );
-  }
+  factory Favorite.fromJson(Map<String, dynamic> json) => Favorite(
+    id: json['id'] ?? 0,
+    artworkId: json['artworkId'] ?? '',
+    addedAt: json['addedAt'] ?? '',
+    title: json['title'] ?? '',
+    price: (json['price'] ?? 0).toDouble(),
+    imageUrl: json['imageUrl'] ?? '',
+    description: json['description'] ?? '',
+    category: json['category'] ?? '',
+    currency: json['currency'] ?? '\$',
+  );
 
-  // Convert to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'artworkId': artworkId,
-      'addedAt': addedAt,
-      'title': title,
-      'price': price,
-      'imageUrl': imageUrl,
-      'description': description,
-      'category': category,
-      'currency': currency,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'artworkId': artworkId,
+    'addedAt': addedAt,
+    'title': title,
+    'price': price,
+    'imageUrl': imageUrl,
+    'description': description,
+    'category': category,
+    'currency': currency,
+  };
 }

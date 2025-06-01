@@ -3,10 +3,8 @@ import 'package:khat_husseini/screens/main_navigation_screen.dart';
 import 'package:khat_husseini/screens/login_screen.dart';
 import 'package:khat_husseini/screens/start_screen.dart';
 import 'package:khat_husseini/screens/signup_screen.dart';
-import 'package:khat_husseini/utils/database_helper.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'dart:io';
 
 // Set this flag to true if you need to reset the database
 // Don't forget to set it back to false after first run
