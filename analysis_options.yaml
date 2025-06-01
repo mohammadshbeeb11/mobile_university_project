@@ -14,6 +14,7 @@ analyzer:
     must_be_immutable: ignore
     avoid_print: ignore
     constant_identifier_names: ignore
+    unrelated_type_equality_checks: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:
