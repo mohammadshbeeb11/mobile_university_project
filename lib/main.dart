@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:khat_husseini/screens/main_navigation_screen.dart';
 import 'package:khat_husseini/screens/login_screen.dart';
 import 'package:khat_husseini/screens/start_screen.dart';
-import 'package:khat_husseini/screens/signup_screen.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-// Set this flag to true if you need to reset the database
-// Don't forget to set it back to false after first run
 const bool RESET_DATABASE = false;
 
 void main() async {
@@ -73,7 +70,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const StartScreen(),
         '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignupScreen(),
         '/main': (context) => const MainNavigationScreen(),
       },
     );

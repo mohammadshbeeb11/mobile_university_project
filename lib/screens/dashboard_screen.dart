@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/screens/add_item_screen.dart';
-import 'package:khat_husseini/utils/my_appbar.dart';
-import 'package:khat_husseini/utils/database_helper.dart';
-import 'package:khat_husseini/widgets/artwork_collection.dart';
-import 'package:khat_husseini/widgets/artwork_featured_carousel.dart';
+import 'package:khat_husseini/widgets/common/my_appbar.dart';
+import 'package:khat_husseini/services/database_helper.dart';
+import 'package:khat_husseini/widgets/artwork/artwork_collection.dart';
+import 'package:khat_husseini/widgets/artwork/artwork_featured_carousel.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

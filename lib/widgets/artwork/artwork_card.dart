@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/screens/artwork_details_screen.dart';
-import 'package:khat_husseini/utils/database_helper.dart';
+import 'package:khat_husseini/services/database_helper.dart';
+import 'dart:io';
 
 class ArtworkCard extends StatefulWidget {
   final Artwork artwork;
@@ -110,10 +111,36 @@ class _ArtworkCardState extends State<ArtworkCard> {
                     aspectRatio: 16 / 9,
                     child: Hero(
                       tag: 'artwork-${widget.artwork.id}',
-                      child: Image.network(
-                        widget.artwork.imageUrl,
-                        fit: BoxFit.cover,
-                      ),
+                      child:
+                          widget.artwork.imageUrl.startsWith('http')
+                              ? Image.network(
+                                widget.artwork.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              )
+                              : Image.file(
+                                File(widget.artwork.imageUrl),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              ),
                     ),
                   ),
                 ),

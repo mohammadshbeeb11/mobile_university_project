@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:khat_husseini/utils/my_button.dart';
-import 'package:khat_husseini/utils/my_field.dart';
+import 'package:khat_husseini/widgets/common/my_button.dart';
+import 'package:khat_husseini/widgets/forms/my_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

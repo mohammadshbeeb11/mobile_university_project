@@ -45,6 +45,10 @@ class CartItem {
     'currency': currency,
   };
 
+/*
+  ensure that when we update specific fields, 
+  the other still exists
+ */
   CartItem copyWith({
     int? id,
     String? artworkId,

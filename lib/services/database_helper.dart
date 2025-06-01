@@ -5,6 +5,8 @@ import '../models/cart_item_model.dart';
 import '../models/favorite_model.dart';
 import '../models/user_model.dart';
 
+/// Database helper class that manages SQLite database operations for the Khat Husseinii art application.
+/// Implements singleton pattern to ensure only one database instance exists.
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
@@ -13,17 +15,24 @@ class DatabaseHelper {
 
   factory DatabaseHelper() => _instance;
 
+  /// Gets the database instance, initializing it if it doesn't exist.
+  /// Returns a Future that resolves to the Database instance.
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
+  /// Initializes the SQLite database with the specified path and version.
+  /// Creates the database file if it doesn't exist and calls _onCreate for table creation.
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'khat_husseini.db');
+    String path = join(await getDatabasesPath(), 'khat_husseinii.db');
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
+  /// Creates all database tables when the database is first created.
+  /// Sets up tables for artworks, cart items, favorites, user profile, and users.
+  /// Also inserts initial sample data.
   Future<void> _onCreate(Database db, int version) async {
     // Create artworks table
     await db.execute('''
@@ -88,80 +97,9 @@ class DatabaseHelper {
     await _insertSampleData(db);
   }
 
+  /// Inserts initial sample data into the database during creation.
+  /// Creates a default admin user profile and authentication record.
   Future<void> _insertSampleData(Database db) async {
-    // Sample artworks
-    final sampleArtworks = [
-      {
-        'id': '1',
-        'imageUrl': 'https://example.com/artwork1.jpg',
-        'title': 'يا أبتاه',
-        'description':
-            'فما يتضع "لبعض" يا أبتاه! أظل "معطلكات" جولة يتهي صقب نتى علقت، تر ةو فوض عمر من إسلامي.',
-        'category': 'portraits',
-        'price': 100.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-      {
-        'id': '2',
-        'imageUrl': 'https://example.com/artwork2.jpg',
-        'title': 'الوليد الأعظم',
-        'description': 'عمل فني معقد يجبو عاله مطاليت بتكم ملحيس لوافرار.',
-        'category': 'historical',
-        'price': 100.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-      {
-        'id': '3',
-        'imageUrl': 'https://example.com/artwork3.jpg',
-        'title': 'Islamic Banner',
-        'description':
-            'Traditional Islamic banner with beautiful calligraphy and ornate designs.',
-        'category': 'Banner',
-        'price': 150.0,
-        'currency': '\$',
-        'isFeatured': 0,
-      },
-      {
-        'id': '4',
-        'imageUrl': 'https://example.com/artwork4.jpg',
-        'title': 'Sacred Flag',
-        'description':
-            'Historical flag with religious significance and intricate patterns.',
-        'category': 'Flag',
-        'price': 120.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-      {
-        'id': '5',
-        'imageUrl': 'https://example.com/artwork5.jpg',
-        'title': 'Modern Painting',
-        'description':
-            'Contemporary artwork blending traditional and modern artistic techniques.',
-        'category': 'Paintings',
-        'price': 200.0,
-        'currency': '\$',
-        'isFeatured': 0,
-      },
-      {
-        'id': '6',
-        'imageUrl': 'https://example.com/artwork6.jpg',
-        'title': 'Holy Shrine',
-        'description':
-            'Artistic representation of a sacred shrine with golden details.',
-        'category': 'shrines',
-        'price': 300.0,
-        'currency': '\$',
-        'isFeatured': 1,
-      },
-    ];
-
-    for (var artwork in sampleArtworks) {
-      await db.insert('artworks', artwork);
-    }
-
     // Sample user profile
     await db.insert('user_profile', {
       'id': 1,
@@ -183,6 +121,9 @@ class DatabaseHelper {
   }
 
   // Artwork operations
+
+  /// Retrieves all artworks from the database.
+  /// Returns a list of Artwork objects containing all artwork records.
   Future<List<Artwork>> getAllArtworks() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('artworks');
@@ -191,6 +132,8 @@ class DatabaseHelper {
     });
   }
 
+  /// Retrieves only featured artworks from the database.
+  /// Returns a list of Artwork objects where isFeatured is true (1).
   Future<List<Artwork>> getFeaturedArtworks() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -203,6 +146,8 @@ class DatabaseHelper {
     });
   }
 
+  /// Retrieves artworks filtered by a specific category.
+  /// Takes a category string and returns matching Artwork objects.
   Future<List<Artwork>> getArtworksByCategory(String category) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -215,6 +160,8 @@ class DatabaseHelper {
     });
   }
 
+  /// Inserts a new artwork into the database or replaces existing one.
+  /// Takes an Artwork object and stores it in the artworks table.
   Future<void> insertArtwork(Artwork artwork) async {
     final db = await database;
     await db.insert(
@@ -225,6 +172,9 @@ class DatabaseHelper {
   }
 
   // Cart operations
+
+  /// Adds an artwork to the shopping cart with specified quantity.
+  /// Creates a new cart item record with artwork ID, quantity, and timestamp.
   Future<void> addToCart(String artworkId, int quantity) async {
     final db = await database;
     await db.insert('cart_items', {
@@ -234,6 +184,8 @@ class DatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Retrieves all items in the shopping cart with artwork details.
+  /// Joins cart_items and artworks tables to return complete CartItem objects.
   Future<List<CartItem>> getCartItems() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -246,11 +198,15 @@ class DatabaseHelper {
     });
   }
 
+  /// Removes a specific item from the shopping cart.
+  /// Takes the cart item ID and deletes the corresponding record.
   Future<void> removeFromCart(int cartItemId) async {
     final db = await database;
     await db.delete('cart_items', where: 'id = ?', whereArgs: [cartItemId]);
   }
 
+  /// Updates the quantity of a specific cart item.
+  /// Takes cart item ID and new quantity, then updates the record.
   Future<void> updateCartItemQuantity(int cartItemId, int quantity) async {
     final db = await database;
     await db.update(
@@ -261,12 +217,17 @@ class DatabaseHelper {
     );
   }
 
+  /// Removes all items from the shopping cart.
+  /// Deletes all records from the cart_items table.
   Future<void> clearCart() async {
     final db = await database;
     await db.delete('cart_items');
   }
 
   // Favorites operations
+
+  /// Adds an artwork to the user's favorites list.
+  /// Creates a new favorite record with artwork ID and timestamp.
   Future<void> addToFavorites(String artworkId) async {
     final db = await database;
     await db.insert('favorites', {
@@ -275,6 +236,8 @@ class DatabaseHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Removes an artwork from the user's favorites list.
+  /// Deletes the favorite record matching the specified artwork ID.
   Future<void> removeFromFavorites(String artworkId) async {
     final db = await database;
     await db.delete(
@@ -284,6 +247,8 @@ class DatabaseHelper {
     );
   }
 
+  /// Retrieves all favorite artworks with complete artwork details.
+  /// Joins favorites and artworks tables to return Favorite objects.
   Future<List<Favorite>> getFavorites() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -296,6 +261,8 @@ class DatabaseHelper {
     });
   }
 
+  /// Checks if a specific artwork is in the user's favorites.
+  /// Returns true if the artwork is favorited, false otherwise.
   Future<bool> isFavorite(String artworkId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -307,6 +274,9 @@ class DatabaseHelper {
   }
 
   // User profile operations
+
+  /// Retrieves the user profile for the primary user (ID = 1).
+  /// Returns a UserProfile object or null if no profile exists.
   Future<UserProfile?> getUserProfile() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -320,6 +290,8 @@ class DatabaseHelper {
     return null;
   }
 
+  /// Updates the user profile information for the primary user.
+  /// Takes a UserProfile object and updates the corresponding database record.
   Future<void> updateUserProfile(UserProfile profile) async {
     final db = await database;
     await db.update(
@@ -331,6 +303,10 @@ class DatabaseHelper {
   }
 
   // User registration and authentication methods
+
+  /// Registers a new user with name, email, and password.
+  /// Checks for existing users, creates both authentication and profile records.
+  /// Returns true if registration succeeds, false if user already exists or error occurs.
   Future<bool> registerUser(String name, String email, String password) async {
     final db = await database;
     try {
@@ -371,6 +347,8 @@ class DatabaseHelper {
     }
   }
 
+  /// Authenticates a user with email and password credentials.
+  /// Returns true if credentials match an existing user, false otherwise.
   Future<bool> authenticateUser(String email, String password) async {
     final db = await database;
     try {
@@ -387,6 +365,8 @@ class DatabaseHelper {
     }
   }
 
+  /// Retrieves user profile information by email address.
+  /// Returns UserProfile object if found, null if no profile exists for the email.
   Future<UserProfile?> getUserProfileByEmail(String email) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
