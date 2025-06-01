@@ -86,7 +86,7 @@ class StartScreen extends StatelessWidget {
                 // Buttons at the bottom
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/login');
+                    Navigator.pushReplacementNamed(context, '/main');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
@@ -107,7 +107,7 @@ class StartScreen extends StatelessWidget {
 
                 OutlinedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/signup');
+                    Navigator.pushReplacementNamed(context, '/main');
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
@@ -118,7 +118,7 @@ class StartScreen extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    "Sign Up",
+                    "Browse",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
