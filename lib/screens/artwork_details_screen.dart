@@ -19,7 +19,7 @@ class ArtworkDetailsScreen extends StatefulWidget {
 
 class _ArtworkDetailsScreenState extends State<ArtworkDetailsScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper();
+  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper.instance;
   bool _isFavorite = false;
   bool _isAddingToCart = false;
 

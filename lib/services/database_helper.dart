@@ -5,379 +5,510 @@ import '../models/cart_item_model.dart';
 import '../models/favorite_model.dart';
 import '../models/user_model.dart';
 
-/// Database helper class that manages SQLite database operations for the Khat Husseinii art application.
-/// Implements singleton pattern to ensure only one database instance exists.
 class DatabaseHelper {
+  // Constants
+  static const String _databaseName = 'khat_husseinii.db';
+  static const int _databaseVersion = 1;
+  static const int _adminUserId = 1;
+
+  // Table names
+  static const String _artworksTable = 'artworks';
+  static const String _cartItemsTable = 'cart_items';
+  static const String _favoritesTable = 'favorites';
+  static const String _userProfileTable = 'user_profile';
+  static const String _usersTable = 'users';
+
+  // Column names
+  static const String _columnId = 'id';
+  static const String _columnArtworkId = 'artworkId';
+  static const String _columnEmail = 'email';
+  static const String _columnPassword = 'password';
+  static const String _columnIsFeatured = 'isFeatured';
+  static const String _columnCategory = 'category';
+  static const String _columnQuantity = 'quantity';
+
+  // Default admin credentials
+  static const String _defaultAdminEmail = 'admin@admin.com';
+  static const String _defaultAdminPassword = '1234567';
+  static const String _defaultAdminName = 'Hussein Al-Khatib';
+  static const String _defaultAdminPhone = '+1234567890';
+  static const String _defaultAdminAddress = '123 Art Street, Creative City';
+  static const String _defaultProfileImage = 'https://example.com/profile.jpg';
+
+  // Singleton implementation
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
 
   DatabaseHelper._internal();
-
   factory DatabaseHelper() => _instance;
 
   /// Gets the database instance, initializing it if it doesn't exist.
-  /// Returns a Future that resolves to the Database instance.
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
+    _database ??= await _initializeDatabase();
     return _database!;
   }
 
   /// Initializes the SQLite database with the specified path and version.
-  /// Creates the database file if it doesn't exist and calls _onCreate for table creation.
-  Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'khat_husseinii.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+  Future<Database> _initializeDatabase() async {
+    final databasesPath = await getDatabasesPath();
+    final path = join(databasesPath, _databaseName);
+
+    return await openDatabase(
+      path,
+      version: _databaseVersion,
+      onCreate: _createTables,
+    );
   }
 
   /// Creates all database tables when the database is first created.
-  /// Sets up tables for artworks, cart items, favorites, user profile, and users.
-  /// Also inserts initial sample data.
-  Future<void> _onCreate(Database db, int version) async {
-    // Create artworks table
+  Future<void> _createTables(Database db, int version) async {
+    await _createArtworksTable(db);
+    await _createCartItemsTable(db);
+    await _createFavoritesTable(db);
+    await _createUserProfileTable(db);
+    await _createUsersTable(db);
+    await _insertDefaultData(db);
+  }
+
+  /// Creates the artworks table.
+  Future<void> _createArtworksTable(Database db) async {
     await db.execute('''
-      CREATE TABLE artworks(
-        id TEXT PRIMARY KEY,
+      CREATE TABLE $_artworksTable(
+        $_columnId TEXT PRIMARY KEY,
         imageUrl TEXT,
         title TEXT,
         description TEXT,
-        category TEXT,
+        $_columnCategory TEXT,
         price REAL,
         currency TEXT,
-        isFeatured INTEGER
+        $_columnIsFeatured INTEGER
       )
     ''');
+  }
 
-    // Create cart items table
+  /// Creates the cart items table.
+  Future<void> _createCartItemsTable(Database db) async {
     await db.execute('''
-      CREATE TABLE cart_items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        artworkId TEXT,
-        quantity INTEGER,
+      CREATE TABLE $_cartItemsTable(
+        $_columnId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $_columnArtworkId TEXT,
+        $_columnQuantity INTEGER,
         addedAt TEXT,
-        FOREIGN KEY (artworkId) REFERENCES artworks (id)
+        FOREIGN KEY ($_columnArtworkId) REFERENCES $_artworksTable ($_columnId)
       )
     ''');
+  }
 
-    // Create favorites table
+  /// Creates the favorites table.
+  Future<void> _createFavoritesTable(Database db) async {
     await db.execute('''
-      CREATE TABLE favorites(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        artworkId TEXT,
+      CREATE TABLE $_favoritesTable(
+        $_columnId INTEGER PRIMARY KEY AUTOINCREMENT,
+        $_columnArtworkId TEXT,
         addedAt TEXT,
-        FOREIGN KEY (artworkId) REFERENCES artworks (id)
+        FOREIGN KEY ($_columnArtworkId) REFERENCES $_artworksTable ($_columnId)
       )
     ''');
+  }
 
-    // Create user profile table with updated schema including password
+  /// Creates the user profile table.
+  Future<void> _createUserProfileTable(Database db) async {
     await db.execute('''
-      CREATE TABLE user_profile(
-        id INTEGER PRIMARY KEY,
+      CREATE TABLE $_userProfileTable(
+        $_columnId INTEGER PRIMARY KEY,
         name TEXT,
-        email TEXT UNIQUE,
+        $_columnEmail TEXT UNIQUE,
         phone TEXT,
         address TEXT,
         profileImage TEXT,
-        password TEXT
+        $_columnPassword TEXT
       )
     ''');
+  }
 
-    // Create users table for authentication
+  /// Creates the users table for authentication.
+  Future<void> _createUsersTable(Database db) async {
     await db.execute('''
-      CREATE TABLE users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CREATE TABLE $_usersTable(
+        $_columnId INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
-        email TEXT UNIQUE,
-        password TEXT,
+        $_columnEmail TEXT UNIQUE,
+        $_columnPassword TEXT,
         createdAt TEXT
       )
     ''');
-
-    // Insert sample data
-    await _insertSampleData(db);
   }
 
-  /// Inserts initial sample data into the database during creation.
-  /// Creates a default admin user profile and authentication record.
-  Future<void> _insertSampleData(Database db) async {
-    // Sample user profile
-    await db.insert('user_profile', {
-      'id': 1,
-      'name': 'Hussein Al-Khatib',
-      'email': 'admin@admin.com',
-      'phone': '+1234567890',
-      'address': '123 Art Street, Creative City',
-      'profileImage': 'https://example.com/profile.jpg',
-      'password': '1234567', // Add password for the admin user
-    });
+  /// Inserts default admin user data.
+  Future<void> _insertDefaultData(Database db) async {
+    await _insertDefaultUserProfile(db);
+    await _insertDefaultAuthUser(db);
+  }
 
-    // Insert admin user for authentication
-    await db.insert('users', {
+  /// Inserts default user profile.
+  Future<void> _insertDefaultUserProfile(Database db) async {
+    await db.insert(_userProfileTable, {
+      _columnId: _adminUserId,
+      'name': _defaultAdminName,
+      _columnEmail: _defaultAdminEmail,
+      'phone': _defaultAdminPhone,
+      'address': _defaultAdminAddress,
+      'profileImage': _defaultProfileImage,
+      _columnPassword: _defaultAdminPassword,
+    });
+  }
+
+  /// Inserts default authentication user.
+  Future<void> _insertDefaultAuthUser(Database db) async {
+    await db.insert(_usersTable, {
       'name': 'Admin',
-      'email': 'admin@admin.com',
-      'password': '1234567',
+      _columnEmail: _defaultAdminEmail,
+      _columnPassword: _defaultAdminPassword,
       'createdAt': DateTime.now().toIso8601String(),
     });
   }
 
-  // Artwork operations
+  // Artwork Operations
 
   /// Retrieves all artworks from the database.
-  /// Returns a list of Artwork objects containing all artwork records.
   Future<List<Artwork>> getAllArtworks() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('artworks');
-    return List.generate(maps.length, (i) {
-      return Artwork.fromJson(maps[i]);
-    });
+    final maps = await db.query(_artworksTable);
+    return _mapToArtworks(maps);
   }
 
   /// Retrieves only featured artworks from the database.
-  /// Returns a list of Artwork objects where isFeatured is true (1).
   Future<List<Artwork>> getFeaturedArtworks() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'artworks',
-      where: 'isFeatured = ?',
+    final maps = await db.query(
+      _artworksTable,
+      where: '$_columnIsFeatured = ?',
       whereArgs: [1],
     );
-    return List.generate(maps.length, (i) {
-      return Artwork.fromJson(maps[i]);
-    });
+    return _mapToArtworks(maps);
   }
 
   /// Retrieves artworks filtered by a specific category.
-  /// Takes a category string and returns matching Artwork objects.
   Future<List<Artwork>> getArtworksByCategory(String category) async {
+    if (category.isEmpty) throw ArgumentError('Category cannot be empty');
+
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'artworks',
-      where: 'category = ?',
+    final maps = await db.query(
+      _artworksTable,
+      where: '$_columnCategory = ?',
       whereArgs: [category],
     );
-    return List.generate(maps.length, (i) {
-      return Artwork.fromJson(maps[i]);
-    });
+    return _mapToArtworks(maps);
   }
 
   /// Inserts a new artwork into the database or replaces existing one.
-  /// Takes an Artwork object and stores it in the artworks table.
   Future<void> insertArtwork(Artwork artwork) async {
     final db = await database;
     await db.insert(
-      'artworks',
+      _artworksTable,
       artwork.toJson(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // Cart operations
+  /// Maps database results to Artwork objects.
+  List<Artwork> _mapToArtworks(List<Map<String, dynamic>> maps) {
+    return maps.map((map) => Artwork.fromJson(map)).toList();
+  }
+
+  // Cart Operations
 
   /// Adds an artwork to the shopping cart with specified quantity.
-  /// Creates a new cart item record with artwork ID, quantity, and timestamp.
   Future<void> addToCart(String artworkId, int quantity) async {
+    _validateArtworkId(artworkId);
+    _validateQuantity(quantity);
+
     final db = await database;
-    await db.insert('cart_items', {
-      'artworkId': artworkId,
-      'quantity': quantity,
+    await db.insert(_cartItemsTable, {
+      _columnArtworkId: artworkId,
+      _columnQuantity: quantity,
       'addedAt': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Retrieves all items in the shopping cart with artwork details.
-  /// Joins cart_items and artworks tables to return complete CartItem objects.
   Future<List<CartItem>> getCartItems() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+    final maps = await db.rawQuery('''
       SELECT ci.*, a.title, a.price, a.imageUrl, a.currency
-      FROM cart_items ci
-      JOIN artworks a ON ci.artworkId = a.id
+      FROM $_cartItemsTable ci
+      JOIN $_artworksTable a ON ci.$_columnArtworkId = a.$_columnId
     ''');
-    return List.generate(maps.length, (i) {
-      return CartItem.fromJson(maps[i]);
-    });
+    return _mapToCartItems(maps);
   }
 
   /// Removes a specific item from the shopping cart.
-  /// Takes the cart item ID and deletes the corresponding record.
   Future<void> removeFromCart(int cartItemId) async {
+    _validateId(cartItemId);
+
     final db = await database;
-    await db.delete('cart_items', where: 'id = ?', whereArgs: [cartItemId]);
+    await db.delete(
+      _cartItemsTable,
+      where: '$_columnId = ?',
+      whereArgs: [cartItemId],
+    );
   }
 
   /// Updates the quantity of a specific cart item.
-  /// Takes cart item ID and new quantity, then updates the record.
   Future<void> updateCartItemQuantity(int cartItemId, int quantity) async {
+    _validateId(cartItemId);
+    _validateQuantity(quantity);
+
     final db = await database;
     await db.update(
-      'cart_items',
-      {'quantity': quantity},
-      where: 'id = ?',
+      _cartItemsTable,
+      {_columnQuantity: quantity},
+      where: '$_columnId = ?',
       whereArgs: [cartItemId],
     );
   }
 
   /// Removes all items from the shopping cart.
-  /// Deletes all records from the cart_items table.
   Future<void> clearCart() async {
     final db = await database;
-    await db.delete('cart_items');
+    await db.delete(_cartItemsTable);
   }
 
-  // Favorites operations
+  /// Maps database results to CartItem objects.
+  List<CartItem> _mapToCartItems(List<Map<String, dynamic>> maps) {
+    return maps.map((map) => CartItem.fromJson(map)).toList();
+  }
+
+  // Favorites Operations
 
   /// Adds an artwork to the user's favorites list.
-  /// Creates a new favorite record with artwork ID and timestamp.
   Future<void> addToFavorites(String artworkId) async {
+    _validateArtworkId(artworkId);
+
     final db = await database;
-    await db.insert('favorites', {
-      'artworkId': artworkId,
+    await db.insert(_favoritesTable, {
+      _columnArtworkId: artworkId,
       'addedAt': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Removes an artwork from the user's favorites list.
-  /// Deletes the favorite record matching the specified artwork ID.
   Future<void> removeFromFavorites(String artworkId) async {
+    _validateArtworkId(artworkId);
+
     final db = await database;
     await db.delete(
-      'favorites',
-      where: 'artworkId = ?',
+      _favoritesTable,
+      where: '$_columnArtworkId = ?',
       whereArgs: [artworkId],
     );
   }
 
   /// Retrieves all favorite artworks with complete artwork details.
-  /// Joins favorites and artworks tables to return Favorite objects.
   Future<List<Favorite>> getFavorites() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      SELECT f.*, a.title, a.price, a.imageUrl, a.currency, a.description, a.category
-      FROM favorites f
-      JOIN artworks a ON f.artworkId = a.id
+    final maps = await db.rawQuery('''
+      SELECT f.*, a.title, a.price, a.imageUrl, a.currency, a.description, a.$_columnCategory
+      FROM $_favoritesTable f
+      JOIN $_artworksTable a ON f.$_columnArtworkId = a.$_columnId
     ''');
-    return List.generate(maps.length, (i) {
-      return Favorite.fromJson(maps[i]);
-    });
+    return _mapToFavorites(maps);
   }
 
   /// Checks if a specific artwork is in the user's favorites.
-  /// Returns true if the artwork is favorited, false otherwise.
   Future<bool> isFavorite(String artworkId) async {
+    _validateArtworkId(artworkId);
+
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'favorites',
-      where: 'artworkId = ?',
+    final maps = await db.query(
+      _favoritesTable,
+      where: '$_columnArtworkId = ?',
       whereArgs: [artworkId],
     );
     return maps.isNotEmpty;
   }
 
-  // User profile operations
+  /// Maps database results to Favorite objects.
+  List<Favorite> _mapToFavorites(List<Map<String, dynamic>> maps) {
+    return maps.map((map) => Favorite.fromJson(map)).toList();
+  }
 
-  /// Retrieves the user profile for the primary user (ID = 1).
-  /// Returns a UserProfile object or null if no profile exists.
+  // User Profile Operations
+
+  /// Retrieves the user profile for the primary user.
   Future<UserProfile?> getUserProfile() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'user_profile',
-      where: 'id = ?',
-      whereArgs: [1],
+    final maps = await db.query(
+      _userProfileTable,
+      where: '$_columnId = ?',
+      whereArgs: [_adminUserId],
     );
-    if (maps.isNotEmpty) {
-      return UserProfile.fromJson(maps.first);
-    }
-    return null;
+
+    return maps.isNotEmpty ? UserProfile.fromJson(maps.first) : null;
   }
 
   /// Updates the user profile information for the primary user.
-  /// Takes a UserProfile object and updates the corresponding database record.
   Future<void> updateUserProfile(UserProfile profile) async {
     final db = await database;
     await db.update(
-      'user_profile',
+      _userProfileTable,
       profile.toJson(),
-      where: 'id = ?',
-      whereArgs: [1],
+      where: '$_columnId = ?',
+      whereArgs: [_adminUserId],
     );
   }
 
-  // User registration and authentication methods
+  /// Retrieves user profile information by email address.
+  Future<UserProfile?> getUserProfileByEmail(String email) async {
+    _validateEmail(email);
+
+    final db = await database;
+    final maps = await db.query(
+      _userProfileTable,
+      where: '$_columnEmail = ?',
+      whereArgs: [email],
+    );
+
+    return maps.isNotEmpty ? UserProfile.fromJson(maps.first) : null;
+  }
+
+  // Authentication Operations
 
   /// Registers a new user with name, email, and password.
-  /// Checks for existing users, creates both authentication and profile records.
-  /// Returns true if registration succeeds, false if user already exists or error occurs.
   Future<bool> registerUser(String name, String email, String password) async {
-    final db = await database;
-    try {
-      // Check if user already exists
-      final existing = await db.query(
-        'users',
-        where: 'email = ?',
-        whereArgs: [email],
-      );
+    _validateRegistrationData(name, email, password);
 
-      if (existing.isNotEmpty) {
-        return false; // User already exists
+    final db = await database;
+
+    try {
+      if (await _userExists(email)) {
+        return false;
       }
 
-      // Insert new user
-      final userId = await db.insert('users', {
-        'name': name,
-        'email': email,
-        'password': password,
-        'createdAt': DateTime.now().toIso8601String(),
-      });
-
-      // Also create a default user profile
-      await db.insert('user_profile', {
-        'id': userId, // Use the same ID from users table
-        'name': name,
-        'email': email,
-        'phone': '',
-        'address': '',
-        'profileImage': '',
-        'password': password,
-      });
+      final userId = await _insertNewUser(db, name, email, password);
+      await _createUserProfile(db, userId, name, email, password);
 
       return true;
     } catch (e) {
-      print('Error registering user: $e');
+      _logError('Error registering user', e);
       return false;
     }
   }
 
   /// Authenticates a user with email and password credentials.
-  /// Returns true if credentials match an existing user, false otherwise.
   Future<bool> authenticateUser(String email, String password) async {
-    final db = await database;
+    _validateEmail(email);
+    _validatePassword(password);
+
     try {
-      final List<Map<String, dynamic>> result = await db.query(
-        'users',
-        where: 'email = ? AND password = ?',
+      final db = await database;
+      final result = await db.query(
+        _usersTable,
+        where: '$_columnEmail = ? AND $_columnPassword = ?',
         whereArgs: [email, password],
       );
 
       return result.isNotEmpty;
     } catch (e) {
-      print('Error authenticating user: $e');
+      _logError('Error authenticating user', e);
       return false;
     }
   }
 
-  /// Retrieves user profile information by email address.
-  /// Returns UserProfile object if found, null if no profile exists for the email.
-  Future<UserProfile?> getUserProfileByEmail(String email) async {
+  /// Checks if a user with the given email already exists.
+  Future<bool> _userExists(String email) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'user_profile',
-      where: 'email = ?',
+    final existing = await db.query(
+      _usersTable,
+      where: '$_columnEmail = ?',
       whereArgs: [email],
     );
+    return existing.isNotEmpty;
+  }
 
-    if (maps.isNotEmpty) {
-      return UserProfile.fromJson(maps.first);
+  /// Inserts a new user into the users table.
+  Future<int> _insertNewUser(
+    Database db,
+    String name,
+    String email,
+    String password,
+  ) async {
+    return await db.insert(_usersTable, {
+      'name': name,
+      _columnEmail: email,
+      _columnPassword: password,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Creates a user profile for a new user.
+  Future<void> _createUserProfile(
+    Database db,
+    int userId,
+    String name,
+    String email,
+    String password,
+  ) async {
+    await db.insert(_userProfileTable, {
+      _columnId: userId,
+      'name': name,
+      _columnEmail: email,
+      'phone': '',
+      'address': '',
+      'profileImage': '',
+      _columnPassword: password,
+    });
+  }
+
+  // Validation Methods
+
+  /// Validates artwork ID.
+  void _validateArtworkId(String artworkId) {
+    if (artworkId.isEmpty) {
+      throw ArgumentError('Artwork ID cannot be empty');
     }
-    return null;
+  }
+
+  /// Validates quantity.
+  void _validateQuantity(int quantity) {
+    if (quantity <= 0) {
+      throw ArgumentError('Quantity must be greater than 0');
+    }
+  }
+
+  /// Validates ID.
+  void _validateId(int id) {
+    if (id <= 0) {
+      throw ArgumentError('ID must be greater than 0');
+    }
+  }
+
+  /// Validates email format.
+  void _validateEmail(String email) {
+    if (email.isEmpty ||
+        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      throw ArgumentError('Invalid email format');
+    }
+  }
+
+  /// Validates password.
+  void _validatePassword(String password) {
+    if (password.isEmpty) {
+      throw ArgumentError('Password cannot be empty');
+    }
+  }
+
+  /// Validates registration data.
+  void _validateRegistrationData(String name, String email, String password) {
+    if (name.isEmpty) {
+      throw ArgumentError('Name cannot be empty');
+    }
+    _validateEmail(email);
+    _validatePassword(password);
+  }
+
+  /// Logs errors with consistent formatting.
+  void _logError(String message, dynamic error) {
+    print('$message: $error');
   }
 }

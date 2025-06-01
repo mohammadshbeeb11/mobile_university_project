@@ -18,7 +18,7 @@ class CartScreen extends StatefulWidget {
 
 class CartScreenState extends State<CartScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper();
+  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper.instance;
 
   List<CartItem> _cartItems = [];
   bool _isLoading = true;

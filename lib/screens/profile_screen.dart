@@ -17,7 +17,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper();
+  final SharedPrefsHelper _prefsHelper = SharedPrefsHelper.instance;
   UserProfile? _userProfile;
   bool _isLoading = true;
   bool _isEditing = false;
