@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 
 class ArtworkBottomBar extends StatelessWidget {
-  final bool isFavorite;
   final bool isAddingToCart;
-  final VoidCallback onToggleFavorite;
   final VoidCallback onAddToCart;
 
   const ArtworkBottomBar({
     super.key,
-    required this.isFavorite,
     required this.isAddingToCart,
-    required this.onToggleFavorite,
     required this.onAddToCart,
   });
 
@@ -31,21 +27,6 @@ class ArtworkBottomBar extends StatelessWidget {
       child: SafeArea(
         child: Row(
           children: [
-            // Favorite Button
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.teal),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                onPressed: onToggleFavorite,
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? Colors.red : Colors.teal,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
             // Add to Cart Button
             Expanded(
               child:

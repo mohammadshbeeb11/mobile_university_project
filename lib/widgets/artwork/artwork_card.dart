@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/screens/artwork_details_screen.dart';
-import 'package:khat_husseini/services/database_helper.dart';
 import 'dart:io';
 
 class ArtworkCard extends StatefulWidget {
@@ -15,61 +14,13 @@ class ArtworkCard extends StatefulWidget {
 }
 
 class _ArtworkCardState extends State<ArtworkCard> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-  bool _isFavorite = false;
 
   @override
   void initState() {
     super.initState();
-    _checkIfFavorite();
   }
 
-  Future<void> _checkIfFavorite() async {
-    final isFav = await _databaseHelper.isFavorite(widget.artwork.id);
-    if (mounted) {
-      setState(() {
-        _isFavorite = isFav;
-      });
-    }
-  }
 
-  Future<void> _toggleFavorite() async {
-    try {
-      if (_isFavorite) {
-        await _databaseHelper.removeFromFavorites(widget.artwork.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${widget.artwork.title} removed from favorites'),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        }
-      } else {
-        await _databaseHelper.addToFavorites(widget.artwork.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${widget.artwork.title} added to favorites'),
-              backgroundColor: Colors.teal,
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        }
-      }
-
-      setState(() {
-        _isFavorite = !_isFavorite;
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +31,6 @@ class _ArtworkCardState extends State<ArtworkCard> {
           MaterialPageRoute(
             builder: (context) => ArtworkDetailsScreen(artwork: widget.artwork),
           ),
-        ).then(
-          (_) => _checkIfFavorite(),
         ); // Refresh favorite status when returning
       },
       child: Container(
@@ -141,26 +90,6 @@ class _ArtworkCardState extends State<ArtworkCard> {
                                   );
                                 },
                               ),
-                    ),
-                  ),
-                ),
-                // Favorite Button
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: _toggleFavorite,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: _isFavorite ? Colors.red : Colors.grey,
-                        size: 20,
-                      ),
                     ),
                   ),
                 ),

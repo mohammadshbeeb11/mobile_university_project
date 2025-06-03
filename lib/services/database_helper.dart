@@ -2,7 +2,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/artwork_model.dart';
 import '../models/cart_item_model.dart';
-import '../models/favorite_model.dart';
 import '../models/user_model.dart';
 
 class DatabaseHelper {
@@ -14,7 +13,6 @@ class DatabaseHelper {
   // Table names
   static const String _artworksTable = 'artworks';
   static const String _cartItemsTable = 'cart_items';
-  static const String _favoritesTable = 'favorites';
   static const String _userProfileTable = 'user_profile';
   static const String _usersTable = 'users';
 
@@ -64,7 +62,6 @@ class DatabaseHelper {
   Future<void> _createTables(Database db, int version) async {
     await _createArtworksTable(db);
     await _createCartItemsTable(db);
-    await _createFavoritesTable(db);
     await _createUserProfileTable(db);
     await _createUsersTable(db);
     await _insertDefaultData(db);
@@ -93,18 +90,6 @@ class DatabaseHelper {
         $_columnId INTEGER PRIMARY KEY AUTOINCREMENT,
         $_columnArtworkId TEXT,
         $_columnQuantity INTEGER,
-        addedAt TEXT,
-        FOREIGN KEY ($_columnArtworkId) REFERENCES $_artworksTable ($_columnId)
-      )
-    ''');
-  }
-
-  /// Creates the favorites table.
-  Future<void> _createFavoritesTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE $_favoritesTable(
-        $_columnId INTEGER PRIMARY KEY AUTOINCREMENT,
-        $_columnArtworkId TEXT,
         addedAt TEXT,
         FOREIGN KEY ($_columnArtworkId) REFERENCES $_artworksTable ($_columnId)
       )
@@ -277,60 +262,6 @@ class DatabaseHelper {
   /// Maps database results to CartItem objects.
   List<CartItem> _mapToCartItems(List<Map<String, dynamic>> maps) {
     return maps.map((map) => CartItem.fromJson(map)).toList();
-  }
-
-  // Favorites Operations
-
-  /// Adds an artwork to the user's favorites list.
-  Future<void> addToFavorites(String artworkId) async {
-    _validateArtworkId(artworkId);
-
-    final db = await database;
-    await db.insert(_favoritesTable, {
-      _columnArtworkId: artworkId,
-      'addedAt': DateTime.now().toIso8601String(),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  /// Removes an artwork from the user's favorites list.
-  Future<void> removeFromFavorites(String artworkId) async {
-    _validateArtworkId(artworkId);
-
-    final db = await database;
-    await db.delete(
-      _favoritesTable,
-      where: '$_columnArtworkId = ?',
-      whereArgs: [artworkId],
-    );
-  }
-
-  /// Retrieves all favorite artworks with complete artwork details.
-  Future<List<Favorite>> getFavorites() async {
-    final db = await database;
-    final maps = await db.rawQuery('''
-      SELECT f.*, a.title, a.price, a.imageUrl, a.currency, a.description, a.$_columnCategory
-      FROM $_favoritesTable f
-      JOIN $_artworksTable a ON f.$_columnArtworkId = a.$_columnId
-    ''');
-    return _mapToFavorites(maps);
-  }
-
-  /// Checks if a specific artwork is in the user's favorites.
-  Future<bool> isFavorite(String artworkId) async {
-    _validateArtworkId(artworkId);
-
-    final db = await database;
-    final maps = await db.query(
-      _favoritesTable,
-      where: '$_columnArtworkId = ?',
-      whereArgs: [artworkId],
-    );
-    return maps.isNotEmpty;
-  }
-
-  /// Maps database results to Favorite objects.
-  List<Favorite> _mapToFavorites(List<Map<String, dynamic>> maps) {
-    return maps.map((map) => Favorite.fromJson(map)).toList();
   }
 
   // User Profile Operations

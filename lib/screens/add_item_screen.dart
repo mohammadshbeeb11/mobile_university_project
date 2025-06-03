@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:khat_husseini/models/artwork_model.dart';
 import 'package:khat_husseini/widgets/forms/image_picker_card.dart';
-import 'package:khat_husseini/widgets/forms/custom_form_field.dart'; // Import the custom field
+import 'package:khat_husseini/widgets/forms/custom_form_field.dart'; 
 
 class AddItemScreen extends StatefulWidget {
   final Function(Artwork) onAddArtwork;
@@ -36,6 +36,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   @override
   void dispose() {
+    // Clean up controllers to optimize performance
     _titleController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
@@ -59,6 +60,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       isFeatured: isFeatured,
     );
 
+    // Call parent callback to handle artwork addition
     widget.onAddArtwork(newArtwork);
     _showSnackBar('Artwork added successfully!', Colors.green);
     Navigator.pop(context);

@@ -20,72 +20,13 @@ class ArtworkDetailsScreen extends StatefulWidget {
 class _ArtworkDetailsScreenState extends State<ArtworkDetailsScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   final SharedPrefsHelper _prefsHelper = SharedPrefsHelper.instance;
-  bool _isFavorite = false;
   bool _isAddingToCart = false;
 
   @override
   void initState() {
     super.initState();
-    _checkIfFavorite();
   }
 
-  Future<void> _checkIfFavorite() async {
-    // First check in shared preferences
-    var isFav = await _prefsHelper.isFavorite(widget.artwork.id);
-
-    // If not found in shared prefs, check database
-    if (!isFav) {
-      isFav = await _databaseHelper.isFavorite(widget.artwork.id);
-    }
-
-    if (mounted) {
-      setState(() {
-        _isFavorite = isFav;
-      });
-    }
-  }
-
-  Future<void> _toggleFavorite() async {
-    try {
-      if (_isFavorite) {
-        // Remove from database
-        await _databaseHelper.removeFromFavorites(widget.artwork.id);
-
-        // Update favorites in shared preferences
-        final favorites = await _databaseHelper.getFavorites();
-        await _prefsHelper.saveFavorites(favorites);
-
-        if (mounted) {
-          _showSnackBar(
-            '${widget.artwork.title} removed from favorites',
-            Colors.orange,
-          );
-        }
-      } else {
-        // Add to database
-        await _databaseHelper.addToFavorites(widget.artwork.id);
-
-        // Update favorites in shared preferences
-        final favorites = await _databaseHelper.getFavorites();
-        await _prefsHelper.saveFavorites(favorites);
-
-        if (mounted) {
-          _showSnackBar(
-            '${widget.artwork.title} added to favorites',
-            Colors.teal,
-          );
-        }
-      }
-
-      setState(() {
-        _isFavorite = !_isFavorite;
-      });
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar('Error: $e', Colors.red);
-      }
-    }
-  }
 
   Future<void> _addToCart() async {
     setState(() {
@@ -203,9 +144,6 @@ class _ArtworkDetailsScreenState extends State<ArtworkDetailsScreen> {
                   ),
 
                   // Add more detail cards based on your Artwork model
-                  // DetailCard(label: 'Artist', value: artwork.artist ?? 'Unknown'),
-                  // DetailCard(label: 'Year', value: artwork.year?.toString() ?? 'Unknown'),
-                  // DetailCard(label: 'Dimensions', value: artwork.dimensions ?? 'Not specified'),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -216,9 +154,7 @@ class _ArtworkDetailsScreenState extends State<ArtworkDetailsScreen> {
 
       // Bottom Bar with Action Buttons
       bottomNavigationBar: ArtworkBottomBar(
-        isFavorite: _isFavorite,
         isAddingToCart: _isAddingToCart,
-        onToggleFavorite: _toggleFavorite,
         onAddToCart: _addToCart,
       ),
     );

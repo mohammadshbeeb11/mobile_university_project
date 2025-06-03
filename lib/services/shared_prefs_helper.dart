@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/cart_item_model.dart';
-import '../models/favorite_model.dart';
 
 /// Exception thrown when SharedPreferences operations fail
 class SharedPrefsException implements Exception {
@@ -22,7 +21,6 @@ class SharedPrefsHelper {
   // Keys for SharedPreferences
   static const String _userProfileKey = 'user_profile';
   static const String _cartItemsKey = 'cart_items';
-  static const String _favoritesKey = 'favorites';
 
   // Singleton pattern
   static SharedPrefsHelper? _instance;
@@ -179,72 +177,6 @@ class SharedPrefsHelper {
   Future<int> getCartItemCount() async {
     final items = await getCartItems();
     return items.fold<int>(0, (sum, item) => sum + (item.quantity ?? 1));
-  }
-
-  // Favorites Methods
-
-  /// Saves list of favorite items to SharedPreferences.
-  /// Throws [SharedPrefsException] if operation fails.
-  Future<void> saveFavorites(List<Favorite> favorites) async {
-    final favoritesJson = _encodeToJson(
-      favorites.map((fav) => fav.toJson()).toList(),
-    );
-    await _saveData(_favoritesKey, favoritesJson);
-  }
-
-  /// Retrieves list of favorite items from SharedPreferences.
-  /// Returns list of [Favorite] objects if data exists, empty list otherwise.
-  /// Throws [SharedPrefsException] if critical error occurs.
-  Future<List<Favorite>> getFavorites() async {
-    final favoritesJson = await _getData(_favoritesKey);
-
-    if (favoritesJson == null) return <Favorite>[];
-
-    return _decodeFromJson(
-      favoritesJson,
-      (json) =>
-          (json as List<dynamic>).map((fav) => Favorite.fromJson(fav)).toList(),
-    );
-  }
-
-  /// Adds artwork to favorites
-  Future<void> addToFavorites(Favorite favorite) async {
-    final currentFavorites = await getFavorites();
-
-    // Avoid duplicates
-    if (!currentFavorites.any((fav) => fav.artworkId == favorite.artworkId)) {
-      currentFavorites.add(favorite);
-      await saveFavorites(currentFavorites);
-    }
-  }
-
-  /// Removes artwork from favorites
-  Future<void> removeFromFavorites(String artworkId) async {
-    final currentFavorites = await getFavorites();
-    currentFavorites.removeWhere((fav) => fav.artworkId == artworkId);
-    await saveFavorites(currentFavorites);
-  }
-
-  /// Toggles favorite status for artwork
-  Future<bool> toggleFavorite(Favorite favorite) async {
-    final isFav = await isFavorite(favorite.artworkId);
-
-    if (isFav) {
-      await removeFromFavorites(favorite.artworkId);
-      return false;
-    } else {
-      await addToFavorites(favorite);
-      return true;
-    }
-  }
-
-  /// Checks if a specific artwork is marked as favorite.
-  /// Returns true if artwork is in favorites list, false otherwise.
-  Future<bool> isFavorite(String artworkId) async {
-    if (artworkId.isEmpty) return false;
-
-    final favorites = await getFavorites();
-    return favorites.any((fav) => fav.artworkId == artworkId);
   }
 
   // General Methods
